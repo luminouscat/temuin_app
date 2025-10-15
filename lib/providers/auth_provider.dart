@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:temuin_app/models/auth_state.dart';
+import 'package:temuin_app/state/auth_state.dart';
 import 'package:temuin_app/models/user.dart';
 import 'package:temuin_app/providers/dio_provider.dart';
 import 'package:temuin_app/repository/auth_repository.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final dio = ref.watch(dioProvider);
+  final dio = ref.watch(baseDioProvider);
   return AuthRepository(dio);
 });
 
