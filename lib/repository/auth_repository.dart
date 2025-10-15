@@ -13,7 +13,7 @@ class AuthRepository {
   Future<User> login(String email, String password) async {
     try {
       final response = await _dio.post(
-        'api/auth/login',
+        'auth/login',
         data: {'email': email, 'password': password},
       );
 

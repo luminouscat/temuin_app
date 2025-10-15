@@ -1,7 +1,5 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:temuin_app/providers/auth_provider.dart';
 import 'package:temuin_app/screens/login/login.dart';
@@ -194,7 +192,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           style: TextStyle(color: Colors.black54, fontSize: 16),
                         ),
                         Text(
-                          user?.name ?? "User",
+                          user.name,
                           style: const TextStyle(
                             color: Colors.black54,
                             fontSize: 16,
