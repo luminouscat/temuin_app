@@ -1,8 +1,13 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:temuin_app/models/user.dart';
 import 'package:temuin_app/providers/auth_provider.dart';
-import 'package:temuin_app/screens/login/login.dart';
+import 'package:temuin_app/providers/campaign_provider.dart';
+import 'package:temuin_app/screens/auth/login.dart';
+import 'package:temuin_app/screens/campaign/influencer_campaign.dart';
+import 'package:temuin_app/shared/styled_cards.dart';
+import 'package:temuin_app/state/campaign_state.dart';
 import 'package:temuin_app/theme.dart';
 
 class InfluencerHome extends ConsumerStatefulWidget {
@@ -64,25 +69,26 @@ class _InfluencerHomeState extends ConsumerState<InfluencerHome> {
           _bottomNavIndex = index;
         }),
       ),
-      body: SafeArea(child: _getBodyWidget(_bottomNavIndex)),
+      body: SafeArea(child: _getBodyWidget(_bottomNavIndex, context, ref)),
     );
   }
 }
 
-Widget _getBodyWidget(int index) {
+Widget _getBodyWidget(int index, BuildContext context, WidgetRef ref) {
+  // Use keys to maintain widget state when switching
   switch (index) {
     case -1:
-      return HomeScreen();
+      return HomeScreen(key: UniqueKey());
     case 0:
-      return Container(child: Text("Analytics"));
+      return Container(key: UniqueKey(), child: Text("Analytics"));
     case 1:
-      return Container(child: Text("Campaign"));
+      return InfluencerCampaign(key: UniqueKey());
     case 2:
-      return Container(child: Text("Portofolio"));
+      return Container(key: UniqueKey(), child: Text("Portofolio"));
     case 3:
-      return Container(child: Text("Message"));
+      return Container(key: UniqueKey(), child: Text("Message"));
     default:
-      return HomeScreen();
+      return HomeScreen(key: UniqueKey());
   }
 }
 
@@ -94,6 +100,14 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(campaignProvider.notifier).loadCampaigns();
+    });
+  }
+
   // mock grid
   final List<Map<String, dynamic>> gridItems = [
     {
@@ -118,40 +132,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     },
   ];
 
-  // mock campaign data
-  final List<Map<String, dynamic>> mockCampaigns = [
-    {
-      'title': 'Summer Fashion Campaign',
-      'brand': 'Fashion Brand Co.',
-      'budget': '\$500',
-      'deadline': '2 days left',
-    },
-    {
-      'title': 'Tech Product Review',
-      'brand': 'Tech Gadgets Inc.',
-      'budget': '\$800',
-      'deadline': '5 days left',
-    },
-    {
-      'title': 'Food & Beverage Promo',
-      'brand': 'Tasty Foods',
-      'budget': '\$350',
-      'deadline': '1 week left',
-    },
-    {
-      'title': 'Travel Vlog Collab',
-      'brand': 'Travel Agency',
-      'budget': '\$1200',
-      'deadline': '3 days left',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     // user from provider
     final user = ref.watch(currentUserProvider);
-    print(user!.uid);
-    // logout
+    final campaignState = ref.watch(campaignProvider);
+    print('Campaign state: ${campaignState.campaigns} ');
+
     ref.listen(authProvider, (prev, next) {
       if (!next.isAuthenticated && mounted) {
         Navigator.of(context).pushAndRemoveUntil(
@@ -161,149 +148,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     });
 
-    return CustomScrollView(
-      slivers: <Widget>[
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      width: 60,
-                      height: 60,
-                      child: Image.asset('assets/images/default_pfp.jpg'),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // user info
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Hello,",
-                          style: TextStyle(color: Colors.black54, fontSize: 16),
-                        ),
-                        Text(
-                          user.name,
-                          style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                // action buttons
-                IconButton(
+    ref.listen(campaignProvider, (prev, next) {
+      if (next.errorMessage != null) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("There's an error in the campaign!"),
+              content: Text(next.errorMessage!),
+              actions: [
+                TextButton(
                   onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("Clicked!"),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text("Ok"),
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                    Navigator.pop(context);
                   },
-                  icon: Badge(
-                    label: Text('5'),
-                    child: Icon(
-                      Icons.notifications,
-                      color: CustomColors.darkPrimaryColor,
-                    ),
-                  ),
+                  child: Text("Ok"),
                 ),
               ],
-            ),
-          ),
-        ),
+            );
+          },
+        );
+      }
+    });
+
+    void _handleLogout(WidgetRef ref) {
+      ref.read(authProvider.notifier).logout();
+    }
+
+    return CustomScrollView(
+      slivers: <Widget>[
+        SliverToBoxAdapter(child: _buildHeader(user)),
 
         // Gridview
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final item = gridItems[index];
-              return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("Clicked!"),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text("Ok"),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-
-                          children: [
-                            Text(
-                              item['label'] as String,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const Spacer(),
-                            Icon(
-                              item['icon'] as IconData,
-                              size: 25,
-                              color: item['color'] as Color,
-                            ),
-                          ],
-                        ),
-                        Text("Random numbers"),
-                        Text("Random icon"),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }, childCount: 4),
-          ),
+          sliver: _buildGrid(gridItems),
         ),
 
         // List view header
@@ -317,26 +195,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   'Available Campaigns',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
+
+                // temp logout button
                 TextButton(
                   onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("Clicked!"),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text("Ok"),
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                    _handleLogout(ref);
                   },
-                  child: const Text('See All'),
+                  child: const Text(
+                    "Logout",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -344,111 +216,139 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
 
         // List view
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final campaign = mockCampaigns[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("Clicked!"),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text("Ok"),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withAlpha(10),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.work,
-                            color: Colors.blue,
-                            size: 30,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                campaign['title']!,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                campaign['brand']!,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.blueGrey,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.yellowAccent.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  campaign['deadline']!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.blueGrey,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: Colors.grey,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }, childCount: mockCampaigns.length),
-          ),
-        ),
+        _buildCampaignsList(campaignState, ref),
       ],
     );
   }
+}
+
+Widget _buildHeader(User? user) {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              width: 60,
+              height: 60,
+              child: GestureDetector(
+                onTap: () {},
+                child: Image.asset('assets/images/default_pfp.jpg'),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // user info
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Hello,",
+                  style: TextStyle(color: Colors.black54, fontSize: 16),
+                ),
+                Text(
+                  user?.name ?? 'No name',
+                  style: const TextStyle(color: Colors.black54, fontSize: 16),
+                ),
+              ],
+            ),
+          ],
+        ),
+        // action buttons
+        IconButton(
+          onPressed: () {},
+          icon: Badge(
+            label: Text('5'),
+            child: Icon(
+              Icons.notifications,
+              color: CustomColors.darkPrimaryColor,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildGrid(dynamic items) {
+  return SliverGrid(
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.2,
+    ),
+    delegate: SliverChildBuilderDelegate((context, index) {
+      final item = items[index];
+      return HomeGridCard(
+        onTap: () {},
+        titleText: item['label'] as String,
+        icon: item['icon'] as IconData,
+        color: item['color'] as Color,
+      );
+    }, childCount: 4),
+  );
+}
+
+Widget _buildCampaignsList(CampaignState campaignState, WidgetRef ref) {
+  if (campaignState.isLoading) {
+    return const SliverToBoxAdapter(
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
+
+  if (campaignState.campaigns.isEmpty) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            children: [
+              Icon(Icons.campaign_outlined, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('No campaigns available'),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  ref.read(campaignProvider.notifier).loadCampaigns();
+                },
+                child: const Text('Refresh'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  return SliverPadding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    sliver: SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final campaign = campaignState.campaigns[index];
+          return HomeCampaignCard(
+            title: campaign.title,
+            brand: campaign.owner.name,
+            deadline: campaign.deadlineText,
+            onTap: () {},
+          );
+        },
+        childCount: campaignState.campaigns.length > 5
+            ? 5
+            : campaignState.campaigns.length,
+      ),
+    ),
+  );
 }

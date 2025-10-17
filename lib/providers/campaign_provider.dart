@@ -23,6 +23,7 @@ class CampaignNotifier extends StateNotifier<CampaignState> {
       state = CampaignState(campaigns: campaigns, isLoading: false);
     } catch (e) {
       state = CampaignState(isLoading: false, errorMessage: e.toString());
+      print(e.toString());
     }
   }
 

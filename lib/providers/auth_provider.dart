@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:temuin_app/providers/campaign_provider.dart';
 import 'package:temuin_app/state/auth_state.dart';
 import 'package:temuin_app/models/user.dart';
 import 'package:temuin_app/providers/dio_provider.dart';

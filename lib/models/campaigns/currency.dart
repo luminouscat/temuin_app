@@ -10,9 +10,9 @@ class Currency {
     required this.thousandsSeparator,
     required this.exchangeToUsd,
     this.isActive = true,
-    this.isDefault = 0,
-    this.createdAt,
-    this.updateAt,
+    this.isDefault = true,
+    // this.createdAt,
+    // this.updateAt,
   });
 
   final int id;
@@ -24,10 +24,10 @@ class Currency {
   final String decimalSeparator;
   final String thousandsSeparator;
   final String exchangeToUsd;
-  final bool isActive;
-  final int isDefault;
-  final DateTime? createdAt;
-  final DateTime? updateAt;
+  final bool? isActive;
+  final bool? isDefault;
+  // final DateTime? createdAt;
+  // final DateTime? updateAt;
 
   factory Currency.fromJson(Map<String, dynamic> json) {
     return Currency(
@@ -41,13 +41,13 @@ class Currency {
       thousandsSeparator: json['thousands_separator'],
       exchangeToUsd: json['exchange_rate_to_usd'],
       isActive: json['is_active'] ?? true,
-      isDefault: json['is_default'] ?? 0,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
-      updateAt: json['updated_at'] != null
-          ? DateTime.parse(json['update_at'])
-          : null,
+      isDefault: json['is_default'] ?? false,
+      // createdAt: json['created_at'] != null
+      //     ? DateTime.parse(json['created_at'])
+      //     : null,
+      // updateAt: json['updated_at'] != null
+      //     ? DateTime.parse(json['update_at'])
+      //     : null,
     );
   }
 
@@ -80,6 +80,7 @@ final hardcodedCurrencies = [
     decimalSeparator: ",",
     thousandsSeparator: ".",
     exchangeToUsd: "15000.000000",
+    isDefault: true,
   ),
   const Currency(
     id: 2,
@@ -90,7 +91,8 @@ final hardcodedCurrencies = [
     decimalPlaces: 0,
     decimalSeparator: ",",
     thousandsSeparator: ".",
-    exchangeToUsd: "4,22.000000",
+    exchangeToUsd: "4,22",
+    isDefault: true,
   ),
   const Currency(
     id: 3,
@@ -101,6 +103,7 @@ final hardcodedCurrencies = [
     decimalPlaces: 0,
     decimalSeparator: ",",
     thousandsSeparator: ".",
-    exchangeToUsd: "1,30.000000",
+    exchangeToUsd: "1,30",
+    isDefault: true,
   ),
 ];
