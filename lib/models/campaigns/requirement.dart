@@ -8,8 +8,6 @@ class Requirement {
     required this.requirementValue,
     required this.operator,
     required this.description,
-    this.createdAt,
-    this.updatedAt,
   });
 
   final int id;
@@ -18,8 +16,6 @@ class Requirement {
   final String requirementValue;
   final RequirementOperator operator;
   final String description;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
 
   factory Requirement.fromJson(Map<String, dynamic> json) {
     return Requirement(
@@ -32,11 +28,26 @@ class Requirement {
     );
   }
 
-  bool get isAgeRequirement => requirementType == RequirementType.ageMin;
+  bool get isAgeMinRequirement => requirementType == RequirementType.ageMin;
   bool get isLangugageRequirement =>
       requirementType == RequirementType.language;
   bool get isPostFrequencyRequirement =>
       requirementType == RequirementType.postFrequencyMin;
+  bool get isEngagementMinRequirement =>
+      requirementType == RequirementType.postFrequencyMin;
+  bool get isNicheCategoryRequirement =>
+      requirementType == RequirementType.nicheCategory;
+  bool get isFollowersMinRequirement =>
+      requirementType == RequirementType.followersMin;
+  bool get isFollowersMaxRequirement =>
+      requirementType == RequirementType.followersMax;
+  bool get isAgeMax => requirementType == RequirementType.ageMax;
+  bool get isLocation => requirementType == RequirementType.location;
+  bool get isBusinessAccount =>
+      requirementType == RequirementType.businessAccount;
+  bool get isVerifiedAccount =>
+      requirementType == RequirementType.verifiedAccount;
+  bool get isGender => requirementType == RequirementType.gender;
 
   // display in UI
   String get displayText {
@@ -47,6 +58,24 @@ class Requirement {
         return 'Langugage $requirementValue';
       case RequirementType.postFrequencyMin:
         return 'Posts ${operator.symbol} $requirementValue per week';
+      case RequirementType.engagementRateMin:
+        return 'Engagement ${operator.symbol} $requirementValue minimal';
+      case RequirementType.nicheCategory:
+        return 'Category ${operator.symbol} $requirementValue';
+      case RequirementType.followersMin:
+        return 'Followers ${operator.symbol} $requirementValue followers';
+      case RequirementType.followersMax:
+        return 'Followers ${operator.symbol} $requirementValue';
+      case RequirementType.ageMax:
+        return 'Age ${operator.symbol} $requirementValue years';
+      case RequirementType.location:
+        return 'Location ${operator.symbol} $requirementValue';
+      case RequirementType.businessAccount:
+        return 'Account ${operator.symbol} $requirementValue';
+      case RequirementType.verifiedAccount:
+        return 'Account ${operator.symbol} $requirementValue';
+      case RequirementType.gender:
+        return 'Gender ${operator.symbol} $requirementValue';
     }
   }
 }

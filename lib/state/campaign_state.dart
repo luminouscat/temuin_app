@@ -2,7 +2,7 @@ import 'package:temuin_app/models/campaigns/campaign.dart';
 
 class CampaignState {
   const CampaignState({
-    this.campaigns = const [],
+    this.campaigns = const <Campaign>[],
     this.selectedCampaign,
     this.isLoading = false,
     this.errorMessage,

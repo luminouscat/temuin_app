@@ -1,6 +1,6 @@
 class User {
   const User({
-    required this.uid,
+    required this.id,
     required this.name,
     required this.email,
     required this.userType,
@@ -8,25 +8,25 @@ class User {
   });
 
   // Parse from api
-  final int uid;
+  final int id;
   final String name;
   final String email;
   final String userType;
   final String accessToken;
   factory User.fromJson(Map<String, dynamic> json) {
-    final userData = json['user'];
+    final userData = json['user'] ?? json;
     return User(
-      uid: userData['id'],
-      name: userData['name'],
-      email: userData['email'],
-      userType: userData['user_type'],
-      accessToken: json['access_token'],
+      id: userData['id'] ?? 0,
+      name: userData['name'] ?? 'Unknown',
+      email: userData['email'] ?? '',
+      userType: userData['user_type'] ?? 'Unknown',
+      accessToken: json['access_token'] ?? '',
     );
   }
 
   // convert to JSON
   Map<String, dynamic> toJson() => {
-    'user': {'id': uid, 'name': name, 'email': email, 'user_type': userType},
+    'user': {'id': id, 'name': name, 'email': email, 'user_type': userType},
     'access_token': accessToken,
   };
 
